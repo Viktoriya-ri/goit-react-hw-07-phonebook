@@ -1,65 +1,94 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { fetchContacts, addContact, deleteContact } from './operations';
+import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
+import { addContact, deleteContact, fetchContacts } from './operations';
 
-const initialState = {
+const contactsInitialState = {
   items: [],
   isLoading: false,
   error: null,
 };
 
-// робимо 2 функції, щоб не дублювати код
-const handlePending = state => {
-  return {
-    ...state,
-    isLoading: true,
-  };
-};
+export const requestContacts = createAsyncThunk(
+  'contacts/fetchAll',
+  async (_, thunkAPI) => {
+    try {
+      const contactsData = await fetchContacts();
+      return contactsData;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
-const handleRejected = (state, action) => {
-  return {
-    ...state,
-    isLoading: false,
-    error: action.payload,
-  };
-};
+export const requestDeleteContact = createAsyncThunk(
+  'contacts/deleteContact',
+  async (id, thunkAPI) => {
+    try {
+      const response = await deleteContact(id);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
-// розбиваємо на 3 функції, щоб не дублювати код
-const handleFetchContactsSuccess = (state, action) => {
-  return { ...state, isLoading: false, error: null, items: action.payload };
-};
+export const requestAddContact = createAsyncThunk(
+  'contacts/addContact',
+  async (newContact, thunkAPI) => {
+    try {
+      const response = await addContact(newContact);
+      console.log(response);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
-const handleAddContactSuccess = (state, action) => {
-  return {
-    ...state,
-    isLoading: false,
-    error: null,
-    items: [action.payload, ...state.items],
-  };
-};
-
-const handleDeleteContactSuccess = (state, action) => {
-  return {
-    ...state,
-    isLoading: false,
-    error: null,
-    items: state.items.filter(item => item.id !== action.payload.id),
-  };
-};
-
-// для кожного з цих екшенів буде створено actionCreator
 const contactsSlice = createSlice({
   name: 'contacts',
-  initialState,
-  extraReducers: {
-    [fetchContacts.pending]: handlePending,
-    [addContact.pending]: handlePending,
-    [deleteContact.pending]: handlePending,
-    [fetchContacts.rejected]: handleRejected,
-    [addContact.rejected]: handleRejected,
-    [deleteContact.rejected]: handleRejected,
-    [fetchContacts.fulfilled]: handleFetchContactsSuccess,
-    [addContact.fulfilled]: handleAddContactSuccess,
-    [deleteContact.fulfilled]: handleDeleteContactSuccess,
+  initialState: contactsInitialState,
+
+  extraReducers: builder => {
+    builder
+
+      .addCase(requestContacts.fulfilled, (state, action) => {
+        state.items = action.payload;
+        state.isLoading = false;
+      })
+
+      .addCase(requestDeleteContact.fulfilled, (state, action) => {
+        state.items = state.items.filter(item => item.id !== action.payload.id);
+        state.isLoading = false;
+      })
+      .addCase(requestAddContact.fulfilled, (state, action) => {
+        state.items = [...state.items, action.payload];
+        state.isLoading = false;
+      })
+
+      .addMatcher(
+        isAnyOf(
+          requestAddContact.pending,
+          requestDeleteContact.pending,
+          requestContacts.pending
+        ),
+        state => {
+          state.isLoading = true;
+          state.error = null;
+        }
+      )
+
+      .addMatcher(
+        isAnyOf(
+          requestAddContact.rejected,
+          requestDeleteContact.rejected,
+          requestContacts.rejected
+        ),
+        (state, action) => {
+          state.isLoading = false;
+          state.error = action.payload;
+        }
+      );
   },
 });
 
