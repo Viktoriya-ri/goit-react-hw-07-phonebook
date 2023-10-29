@@ -9,12 +9,10 @@ export const selectFilteredContacts = createSelector(
   [selectContacts, selectFilter], // масив селекторів
   (contacts, filter) => {
 
-    // для кожного контакта переводимо його ім'я в нижній регістр
-    // і перевіряємо чи воно включає в себе значення фільтра
-    return contacts.filter(({ name }) =>
+     return contacts.filter(({ name }) =>
       name.toLowerCase().includes(filter.toLowerCase())
     );
   }
 );
 
-// Діма Берестень
+
