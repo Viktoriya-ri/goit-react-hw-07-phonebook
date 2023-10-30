@@ -22,11 +22,3 @@ export const selectFilteredContacts = createSelector(
     )
 );
 
-// Фільтрація контактів за значенням фільтра
-// export const selectFilteredContacts = createSelector(
-//   [selectItems, selectFilter],
-//   (contacts, filter) =>
-//     contacts.filter(contact =>
-//       contact.name.toLowerCase().includes(filter.toLowerCase())
-//     )
-// );

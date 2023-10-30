@@ -21,9 +21,6 @@ const contactsSlice = createSlice({
   name: 'contacts',
   // Початковий стан редюсера слайсу
   initialState: contactsInitialState,
-  // Об'єкт внутрішніх редюсерів - відсутні
-  // reducers: { ...},
-  // Зовнішні редюсери з білдером
   extraReducers: bilder => {
     bilder
       .addCase(fetchContacts.pending, handlePending)
