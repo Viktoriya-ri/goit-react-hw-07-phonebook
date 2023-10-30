@@ -1,56 +1,31 @@
-import { useDispatch, useSelector } from 'react-redux'; 
-import { useEffect } from 'react';
-import { GrContactInfo } from 'react-icons/gr';
-import {
-  selectError,
-  selectFilteredContacts,
-  selectIsLoading,
-} from 'redux/selectors';
-import { fetchContacts, deleteContact } from 'redux/operations';
-import { Button, Item, List, Text, Spinner } from './ContactList.styled';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectFilteredContacts } from '../../redux/selectors';
+import { deleteContact } from '../../redux/contactsOperations';
+import { ContactsList, ContactItem, Btn } from './ContactList.styled';
 
-export const ContactList = () => {
-  const filteredContacts = useSelector(selectFilteredContacts);
-  const isLoading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
+const ContactList = () => {
   const dispatch = useDispatch();
+  const filteredContacts = useSelector(selectFilteredContacts);
 
-  useEffect(() => {
-    dispatch(fetchContacts());
-  }, [dispatch]);
-
-  const onDeleteContact = id => {
-    dispatch(deleteContact(id));
+  const handleDeleteContact = contactId => {
+    dispatch(deleteContact(contactId));
   };
 
   return (
-    <>
-      {isLoading && <Spinner />}
+    <ContactsList>
+      {filteredContacts.map(({ id, name, phone }) => (
+        <ContactItem key={id}>
+          <span>{name}: </span>
+          <span>{phone}</span>
+          <Btn type="button" onClick={() => handleDeleteContact(id)}>
+            Delete
+          </Btn>
+        </ContactItem>
+      ))}
 
-      {/* якщо немає контактів і не йде загрузка і не виникла помилка */}
-      {!filteredContacts?.length && !error && !isLoading && (
-        <Text>No contacts found.</Text>
-      )}
-
-      {/* якщо виникла помилка */}
-      {error && <Text>{error}</Text>}
-      <List>
-
-        {/* Перебираємо масив контактів і рендеримо їх */}
-        {filteredContacts.map(({ id, name, phone }) => (
-          <Item key={id}>
-            <GrContactInfo size={20} />
-            <Text>
-              {name}: {phone}
-            </Text>
-            <Button type="button" onClick={() => onDeleteContact(id)}>
-              Delete
-            </Button>
-          </Item>
-        ))}
-      </List>
-    </>
+      {!filteredContacts?.length && <div>No contacts found.</div>}
+    </ContactsList>
   );
 };
 
-
+export default ContactList;

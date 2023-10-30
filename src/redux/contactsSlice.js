@@ -1,5 +1,5 @@
-import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
-import { addContact, deleteContact, fetchContacts } from './operations';
+import { createSlice } from '@reduxjs/toolkit';
+import { fetchContacts, addContact, deleteContact } from './contactsOperations';
 
 const contactsInitialState = {
   items: [],
@@ -7,89 +7,55 @@ const contactsInitialState = {
   error: null,
 };
 
-export const requestContacts = createAsyncThunk(
-  'contacts/fetchAll',
-  async (_, thunkAPI) => {
-    try {
-      const contactsData = await fetchContacts();
-      return contactsData;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  }
-);
+const handlePending = state => {
+  state.isLoading = true;
+};
 
-export const requestDeleteContact = createAsyncThunk(
-  'contacts/deleteContact',
-  async (id, thunkAPI) => {
-    try {
-      const response = await deleteContact(id);
-      console.log(response);
-      return response;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  }
-);
-
-export const requestAddContact = createAsyncThunk(
-  'contacts/addContact',
-  async (newContact, thunkAPI) => {
-    try {
-      const response = await addContact(newContact);
-      console.log(response);
-      return response;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  }
-);
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
 
 const contactsSlice = createSlice({
+  // Ім'я слайсу
   name: 'contacts',
+  // Початковий стан редюсера слайсу
   initialState: contactsInitialState,
-
-  extraReducers: builder => {
-    builder
-
-      .addCase(requestContacts.fulfilled, (state, action) => {
+  // Об'єкт внутрішніх редюсерів - відсутні
+  // reducers: { ...},
+  // Зовнішні редюсери з білдером
+  extraReducers: bilder => {
+    bilder
+      .addCase(fetchContacts.pending, handlePending)
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
         state.items = action.payload;
-        state.isLoading = false;
       })
+      .addCase(fetchContacts.rejected, handleRejected)
 
-      .addCase(requestDeleteContact.fulfilled, (state, action) => {
-        state.items = state.items.filter(item => item.id !== action.payload.id);
+      .addCase(addContact.pending, handlePending)
+      .addCase(addContact.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
+        state.items.push(action.payload);
       })
-      .addCase(requestAddContact.fulfilled, (state, action) => {
-        state.items = [...state.items, action.payload];
+      .addCase(addContact.rejected, handleRejected)
+
+      .addCase(deleteContact.pending, handlePending)
+      .addCase(deleteContact.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
+        const index = state.items.findIndex(
+          task => task.id === action.payload.id
+        );
+        state.items.splice(index, 1);
       })
-
-      .addMatcher(
-        isAnyOf(
-          requestAddContact.pending,
-          requestDeleteContact.pending,
-          requestContacts.pending
-        ),
-        state => {
-          state.isLoading = true;
-          state.error = null;
-        }
-      )
-
-      .addMatcher(
-        isAnyOf(
-          requestAddContact.rejected,
-          requestDeleteContact.rejected,
-          requestContacts.rejected
-        ),
-        (state, action) => {
-          state.isLoading = false;
-          state.error = action.payload;
-        }
-      );
+      .addCase(deleteContact.rejected, handleRejected);
   },
 });
 
+// Експорт генераторів екшенів не потрібен - внутрішні екшени відсутні
+// ...
+// Експорт редюсера слайсу
 export const contactsReducer = contactsSlice.reducer;
