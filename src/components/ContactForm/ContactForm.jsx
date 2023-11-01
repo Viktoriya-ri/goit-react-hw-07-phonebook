@@ -58,7 +58,7 @@ const ContactForm = () => {
         <FormInput
           type="text"
           name="name"
-          title="Name may contain only letters, apostrophe, dash and spaces. For example Robin , Mrs. Lonnie, Angie"
+          title="Name may contain only letters, apostrophe, dash and spaces."
           required
           value={name}
           onChange={handleInputChange}
