@@ -18,7 +18,7 @@ const handleRejected = (state, action) => {
 
 const contactsSlice = createSlice({
   // Ім'я слайсу
-  name: 'contacts',
+  name: 'Phonebook',
   // Початковий стан редюсера слайсу
   initialState: contactsInitialState,
   extraReducers: bilder => {
